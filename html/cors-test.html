@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CORS Anywhere Test</title>
+</head>
+<body>
+    <h1>CORS Anywhere Server Test</h1>
+    <button id="testButton">Test CORS Proxy</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('testButton').addEventListener('click', async () => {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                // Test the CORS proxy with your target URL
+                const proxyUrl = 'http://localhost:8081/';
+                const targetUrl = 'http://simulation-amd.waveautoscale.io/ns-tm/tm-node-dp-1/process';
+                
+                const response = await fetch(proxyUrl + targetUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Origin': window.location.origin,
+                        'X-Requested-With': 'XMLHttpRequest'
+                    },
+                    body: JSON.stringify([{
+                        id: 1,
+                        "cpu-bound": 20
+                    }])
+                });
+                
+                const data = await response.text();
+                resultDiv.innerHTML = `
+                    <h3>✅ Success!</h3>
+                    <p><strong>Status:</strong> ${response.status}</p>
+                    <p><strong>Response:</strong></p>
+                    <pre>${data}</pre>
+                `;
+                
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h3>❌ Error</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        });
+    </script>
+</body>
+</html>

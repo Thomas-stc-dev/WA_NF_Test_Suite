@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Button POST Requests</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 50px;
+      }
+
+      button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        margin: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+    </style>
+    <script
+      src="https://agent-lib.staging.stclab.com/agents/client/javascript/netfunnel-javascript-agent.js"
+      data-nf-server-url="https://jerry-5990.netfunnel.staging.stclab.com"
+      data-nf-setting-url="https://nf-setting-bucket.staging.stclab.com/jerry-5990.netfunnel/nf-setting.json"
+      data-nf-vwr-page-url="https://agent-lib.staging.stclab.com/vwr-page/jerry-5990.netfunnel/index.html"
+      data-nf-retry-count="0"
+      data-nf-network-timeout="3000"
+    ></script>
+    <script
+      src="https://agent-lib.staging.stclab.com/agents/eum/browser/eum-browser.js"
+      defer
+      onload="initializeEUM()"
+    ></script>
+    <script>
+      async function initializeEUM() {
+        const initResult = await window.STC_EUM.initialize({
+          serverURL: "https://eum-receiver-v3.staging.stclab.com/eum_data",
+          settingURL:
+            "https://nf-setting-bucket.staging.stclab.com/jerry-5990.netfunnel/nf-setting.json",
+          clientId: "TN241222-01A9F6A2",
+          trackResource: true,
+          printLog: false,
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <h1>POST Request Buttons</h1>
+    <button id="button1">Send cpu bound POST Request</button>
+    <button id="button2">Send memory bound POST Request</button>
+
+    <script>
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("Access-Control-Allow-Origin", "*");
+
+      const corsProxy = "https://cors-anywhere.herokuapp.com/";
+      const payloadCpu = JSON.stringify([{ id: 1, "cpu-bound": 1 }]);
+      const payloadMem = JSON.stringify([{ id: 2, "memory-bound": 20 }]);
+
+      const requestOptions = (payloadBody) => ({
+        method: "POST",
+        headers: myHeaders,
+        body: payloadBody
+     });
+
+      document.getElementById("button1").addEventListener("click", () => {
+        fetch(
+          `${corsProxy}http://simulation-amd.waveautoscale.io/ns-tm/tm-node-dp-1/process`,
+          requestOptions(payloadCpu)
+        )
+          .then((response) => response.json())
+          .then((data) => console.log("Response from Button 1:", data))
+          .catch((error) => console.error("Error:", error));
+      });
+
+      document.getElementById("button2").addEventListener("click", () => {
+        fetch(
+          `${corsProxy}http://simulation-amd.waveautoscale.io/ns-tm/tm-node-dp-1/process`,
+          requestOptions(payloadMem)
+        )
+          .then((response) => response.json())
+          .then((data) => console.log("Response from Button 2:", data))
+          .catch((error) => console.error("Error:", error));
+      });
+    </script>
+  </body>
+</html>

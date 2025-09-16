@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Button POST Requests</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        text-align: center;
+        margin-top: 50px;
+      }
+
+      button {
+        background-color: #4caf50;
+        color: white;
+        border: none;
+        padding: 15px 30px;
+        margin: 10px;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 5px;
+      }
+
+      button:hover {
+        background-color: #45a049;
+      }
+    </style>
+    <!-- <script
+      src="https://agent-lib.develop.stclab.com/agents/client/javascript/netfunnel-javascript-agent.js"
+      data-nf-server-url="https://thomas-0427.netfunnel.develop.stclab.com"
+      data-nf-setting-url="https://nf-setting-bucket.develop.stclab.com/thomas-0427.netfunnel/nf-setting.json"
+      data-nf-vwr-page-url="https://agent-lib.develop.stclab.com/vwr-page/thomas-0427.netfunnel/index.html"
+      data-nf-retry-count="0"
+      data-nf-network-timeout="3000"
+    ></script> -->
+    <script
+      src="https://agent-lib.develop.stclab.com/agents/client/javascript/netfunnel-javascript-agent.js"
+      data-nf-client-id="thomas-6089"
+    ></script>
+
+    <script
+      src="https://agent-lib.develop.stclab.com/agents/eum/browser/eum-browser.js"
+      defer
+      onload="initializeEUM()"
+    ></script>
+    <script>
+      async function initializeEUM() {
+        const initResult = await window.STC_EUM.initialize({
+          serverURL: "https://eum-receiver-v3.develop.stclab.com/eum_data",
+          settingURL:
+            "https://nf-setting-bucket.develop.stclab.com/thomas-6089.netfunnel/nf-setting.json",
+          clientId: "TN250910-B4BDD30E",
+          trackResource: true,
+          printLog: false,
+        });
+      }
+    </script>
+  </head>
+
+  <body>
+    <h1>POST Request Buttons</h1>
+    <button id="button1">Send cpu bound POST Request</button>
+    <button id="button2">Send memory bound POST Request</button>
+
+    <script>
+      const myHeaders = new Headers();
+      myHeaders.append("Content-Type", "application/json");
+      myHeaders.append("Access-Control-Allow-Origin", "*");
+      myHeaders.append("X-Requested-With", "XMLHttpRequest");
+      myHeaders.append("Origin", "http://tom.taild10c9c.ts.net:8080");
+
+      // const corsProxy = "https://tom.taild10c9c.ts.net/";
+      const corsProxy = "http://52.3.221.167:8888/";
+      const payloadCpu = JSON.stringify([{ id: 1, "cpu-bound": 10 }]);
+      const payloadMem = JSON.stringify([{ id: 2, "memory-bound": 20 }]);
+
+      const requestOptions = (payloadBody) => ({
+        method: "POST",
+        headers: myHeaders,
+        body: payloadBody,
+      });
+
+      document.getElementById("button1").addEventListener("click", () => {
+        fetch(
+          `${corsProxy}http://simulation-amd.waveautoscale.io/ns-tm/tm-node-dp-1/process`,
+          requestOptions(payloadCpu)
+        )
+          .then((response) => response.json())
+          .then((data) => console.log("Response from Button 1:", data))
+          .catch((error) => console.error("Error:", error));
+      });
+
+      document.getElementById("button2").addEventListener("click", () => {
+        fetch(
+          `${corsProxy}http://simulation-amd.waveautoscale.io/ns-tm/tm-node-dp-1/process`,
+          requestOptions(payloadMem)
+        )
+          .then((response) => response.json())
+          .then((data) => console.log("Response from Button 2:", data))
+          .catch((error) => console.error("Error:", error));
+      });
+    </script>
+  </body>
+</html>
