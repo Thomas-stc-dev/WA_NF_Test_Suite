@@ -12,8 +12,8 @@ const config = {
     },
     corsProxy: {
         command: 'bun',
-        args: ['cors-anywhere.ts'],
-        name: '🔗 CORS Proxy'
+        args: ['tinyproxy.ts'],
+        name: '🔗 TinyProxy Server'
     },
     trafficGenerator: {
         command: 'bun',

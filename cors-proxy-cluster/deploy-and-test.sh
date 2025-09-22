@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Deploy and Test CORS-Anywhere Script
-# This script gets all proxy IPs from terraform and installs CORS-Anywhere on each one
+# Deploy and Test TinyProxy Script
+# This script gets all proxy IPs from terraform and installs TinyProxy on each one
 
 set -e  # Exit on any error
 
@@ -9,7 +9,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 KEY_FILE="$HOME/.ssh/tinyproxy-key"
 MANUAL_INSTALL_SCRIPT="$SCRIPT_DIR/manual-install.sh"
 
-echo "🚀 Starting CORS-Anywhere manual installation on all instances..."
+echo "🚀 Starting TinyProxy manual installation on all instances..."
 
 # Check if key file exists
 if [[ ! -f "$KEY_FILE" ]]; then
@@ -84,7 +84,7 @@ install_on_proxy() {
     local total=$3
     
     echo ""
-    echo "📦 [$index/$total] Installing CORS-Anywhere on $ip..."
+    echo "📦 [$index/$total] Installing TinyProxy on $ip..."
     
     # Test SSH connectivity first
     echo "🔗 Testing SSH connectivity..."
@@ -94,7 +94,7 @@ install_on_proxy() {
     fi
     
     # Copy the manual install script
-    echo "� Copying manual-install.sh to $ip..."
+    echo "📁 Copying manual-install.sh to $ip..."
     if ! scp -i "$KEY_FILE" -o StrictHostKeyChecking=no "$MANUAL_INSTALL_SCRIPT" ubuntu@"$ip":~/; then
         echo "❌ Failed to copy script to $ip"
         return 1
@@ -105,20 +105,12 @@ install_on_proxy() {
     if ssh -i "$KEY_FILE" -o StrictHostKeyChecking=no ubuntu@"$ip" "chmod +x ~/manual-install.sh && sudo ~/manual-install.sh"; then
         echo "✅ Installation completed on $ip"
         
-        # Test the CORS-Anywhere proxy (HTTP proxy mode)
-        echo "🧪 Testing CORS-Anywhere HTTP proxy $ip:8888..."
+        # Test the TinyProxy (HTTP proxy mode)
+        echo "🧪 Testing TinyProxy HTTP proxy $ip:8888..."
         if curl -x "$ip:8888" http://httpbin.org/ip --connect-timeout 10 --max-time 15 >/dev/null 2>&1; then
-            echo "✅ CORS-Anywhere HTTP proxy $ip:8888 is working!"
+            echo "✅ TinyProxy HTTP proxy $ip:8888 is working!"
         else
-            echo "⚠️  CORS-Anywhere HTTP proxy $ip:8888 test failed"
-        fi
-        
-        # Test CORS mode
-        echo "🌐 Testing CORS mode on $ip:8888..."
-        if curl "http://$ip:8888/http://httpbin.org/ip" --connect-timeout 10 --max-time 15 >/dev/null 2>&1; then
-            echo "✅ CORS mode on $ip:8888 is working!"
-        else
-            echo "⚠️  CORS mode on $ip:8888 test failed"
+            echo "⚠️  TinyProxy HTTP proxy $ip:8888 test failed"
         fi
     else
         echo "❌ Installation failed on $ip"
@@ -174,10 +166,9 @@ done
 
 if [[ ${#WORKING_PROXIES[@]} -gt 0 ]]; then
     echo ""
-    echo "🎉 Deployment completed! You can use these CORS-Anywhere endpoints:"
+    echo "🎉 Deployment completed! You can use these TinyProxy endpoints:"
     for proxy in "${WORKING_PROXIES[@]}"; do
         echo "  HTTP Proxy: curl -x $proxy http://httpbin.org/ip"
-        echo "  CORS Mode:  curl http://$proxy/http://httpbin.org/ip"
     done
     
     # Save working proxies to a file

@@ -68,11 +68,11 @@
       myHeaders.append("Content-Type", "application/json");
       myHeaders.append("Access-Control-Allow-Origin", "*");
       myHeaders.append("X-Requested-With", "XMLHttpRequest");
-      myHeaders.append("Origin", "http://tom.taild10c9c.ts.net:8080");
+      myHeaders.append("Origin", "http://nf-integration-testing.waveautoscale.io");
 
       // const corsProxy = "https://tom.taild10c9c.ts.net/";
-      const corsProxy = "http://52.3.221.167:8888/";
-      const payloadCpu = JSON.stringify([{ id: 1, "cpu-bound": 10 }]);
+      const corsProxy = "http://13.112.112.228:8889/";
+      const payloadCpu = JSON.stringify([{ id: 1, "cpu-bound": 35 }]);
       const payloadMem = JSON.stringify([{ id: 2, "memory-bound": 20 }]);
 
       const requestOptions = (payloadBody) => ({

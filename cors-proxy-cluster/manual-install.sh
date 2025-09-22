@@ -1,92 +1,105 @@
 #!/bin/bash
-# Manual CORS-Anywhere installation script
+# Manual TinyProxy installation script
 
-echo "=== Manual CORS-Anywhere Installation ==="
+echo "=== Manual TinyProxy Installation ==="
 
 # Update package list
 echo "Updating package list..."
 sudo apt update -y
 
-# Install Node.js (LTS version)
-echo "Installing Node.js..."
-curl -fsSL https://deb.nodesource.com/setup_lts.x | sudo -E bash -
-sudo apt install -y nodejs
+# Install tinyproxy
+echo "Installing tinyproxy..."
+sudo apt install -y tinyproxy
 
-# Create CORS-Anywhere service directory
-echo "Creating service directory..."
-sudo mkdir -p /opt/cors-anywhere
+# Backup original config
+echo "Backing up original config..."
+sudo cp /etc/tinyproxy/tinyproxy.conf /etc/tinyproxy/tinyproxy.conf.backup
 
-# Install CORS-Anywhere locally in the service directory
-echo "Installing CORS-Anywhere..."
-cd /opt/cors-anywhere
-sudo npm init -y
-sudo npm install cors-anywhere
-
-# Create CORS-Anywhere service configuration
-echo "Creating CORS-Anywhere service configuration..."
-sudo tee /opt/cors-anywhere/server.js > /dev/null << 'EOL'
-const cors_proxy = require('cors-anywhere');
-const host = '0.0.0.0';
-const port = 8888;
-
-cors_proxy.createServer({
-    originWhitelist: [], // Allow all origins
-    requireHeader: [], // No required headers
-    removeHeaders: ['cookie', 'cookie2']
-}).listen(port, host, function() {
-    console.log('CORS-Anywhere proxy running on ' + host + ':' + port);
-    console.log('Usage: http://' + host + ':' + port + '/TARGET_URL');
-    console.log('Proxy mode: Use this server as HTTP proxy on port ' + port);
-});
-EOL
-
-# Create systemd service file
-echo "Creating systemd service..."
-sudo tee /etc/systemd/system/cors-anywhere.service > /dev/null << 'EOL'
-[Unit]
-Description=CORS-Anywhere Proxy Server
-After=network.target
-
-[Service]
-Type=simple
-User=nobody
-WorkingDirectory=/opt/cors-anywhere
-ExecStart=/usr/bin/node /opt/cors-anywhere/server.js
-Restart=on-failure
-RestartSec=5
-StandardOutput=syslog
-StandardError=syslog
-SyslogIdentifier=cors-anywhere
-
-[Install]
-WantedBy=multi-user.target
+# Create new tinyproxy configuration
+echo "Creating new tinyproxy configuration..."
+sudo tee /etc/tinyproxy/tinyproxy.conf > /dev/null << 'EOL'
+User tinyproxy
+Group tinyproxy
+Port 8888
+Allow 0.0.0.0/0
+LogFile "/var/log/tinyproxy/tinyproxy.log"
+LogLevel Info
+MaxClients 100
+MinSpareServers 5
+MaxSpareServers 20
+StartServers 10
+Timeout 600
+DefaultErrorFile "/usr/share/tinyproxy/default.html"
+StatFile "/usr/share/tinyproxy/stats.html"
+ConnectPort 443
+ConnectPort 563
+ConnectPort 80
+ConnectPort 21
+ConnectPort 22
+ConnectPort 25
+ConnectPort 53
+ConnectPort 110
+ConnectPort 143
+ConnectPort 993
+ConnectPort 995
+DisableViaHeader Yes
+Anonymous "Host"
+Anonymous "Authorization" 
+Anonymous "Cookie"
+Anonymous "Referer"
+Anonymous "User-Agent"
+Anonymous "X-Forwarded-For"
+Anonymous "X-Real-IP"
 EOL
 
 # Create log directory
 echo "Creating log directory..."
-sudo mkdir -p /var/log/cors-anywhere
-sudo chown nobody:nogroup /var/log/cors-anywhere
+sudo mkdir -p /var/log/tinyproxy
+sudo chown tinyproxy:tinyproxy /var/log/tinyproxy
 
-# Reload systemd and start service
-echo "Starting CORS-Anywhere service..."
-sudo systemctl daemon-reload
-sudo systemctl restart cors-anywhere
-sudo systemctl enable cors-anywhere
+# Kill any existing tinyproxy processes
+echo "Stopping any existing tinyproxy processes..."
+sudo pkill -f tinyproxy || true
+sleep 2
+
+# Start tinyproxy directly (bypassing systemd issues)
+echo "Starting tinyproxy directly..."
+sudo /usr/bin/tinyproxy -c /etc/tinyproxy/tinyproxy.conf
+
+# Also try to enable the service for future reboots
+echo "Enabling tinyproxy service..."
+sudo systemctl enable tinyproxy || true
 
 # Wait a moment and check status
 sleep 3
-echo "Checking CORS-Anywhere status..."
-sudo systemctl status cors-anywhere --no-pager
+echo "Checking TinyProxy status..."
+sudo systemctl status tinyproxy --no-pager || true
 
 # Test proxy locally (HTTP proxy mode)
 echo "Testing HTTP proxy mode locally..."
 curl -x localhost:8888 http://httpbin.org/ip --connect-timeout 10 || echo "HTTP proxy test failed"
 
-# Test CORS mode locally
-echo "Testing CORS mode locally..."
-curl "http://localhost:8888/http://httpbin.org/ip" --connect-timeout 10 || echo "CORS mode test failed"
+# Check if tinyproxy process is running
+if pgrep -f tinyproxy > /dev/null; then
+    echo "✅ TinyProxy is running successfully"
+    ps aux | grep tinyproxy | grep -v grep
+else
+    echo "❌ TinyProxy failed to start"
+fi
+
+# Create check script for troubleshooting
+cat > /home/ubuntu/check_proxy.sh << 'EOL'
+#!/bin/bash
+echo "Checking TinyProxy process..."
+ps aux | grep tinyproxy | grep -v grep
+echo ""
+echo "Testing proxy locally..."
+curl -x localhost:8888 http://httpbin.org/ip --connect-timeout 10 || echo "Proxy test failed"
+EOL
+
+chmod +x /home/ubuntu/check_proxy.sh
 
 echo "=== Installation Complete ==="
-echo "CORS-Anywhere should now be running on port 8888"
+echo "TinyProxy should now be running on port 8888"
 echo "HTTP Proxy mode: curl -x YOUR_EC2_IP:8888 http://httpbin.org/ip"
-echo "CORS mode: curl http://YOUR_EC2_IP:8888/http://httpbin.org/ip"
+echo "Use /home/ubuntu/check_proxy.sh to troubleshoot if needed"

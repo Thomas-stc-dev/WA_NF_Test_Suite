@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Autpilot Testing Timeline Chart</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        margin: 0;
+        padding: 20px;
+        background-color: #f9fafb;
+      }
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        padding: 30px;
+      }
+      .title {
+        text-align: center;
+        color: #1f2937;
+        font-size: 28px;
+        font-weight: bold;
+        margin-bottom: 30px;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 20px;
+        margin-bottom: 20px;
+        font-size: 14px;
+        color: #6b7280;
+      }
+      .legend-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        cursor: pointer;
+        padding: 8px 12px;
+        border-radius: 6px;
+        transition: background-color 0.2s ease;
+      }
+      .legend-item:hover {
+        background-color: #f3f4f6;
+      }
+      .legend-item.hidden {
+        opacity: 0.4;
+      }
+      .legend-item.hidden .legend-dot {
+        opacity: 0.3;
+      }
+      .legend-dot {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        transition: opacity 0.2s ease;
+      }
+      .chart-container {
+        position: relative;
+        height: 500px;
+        margin-bottom: 20px;
+      }
+      .note {
+        font-size: 14px;
+        color: #6b7280;
+        font-weight: 600;
+      }
+      /* Tab styles */
+      .tab-container {
+        margin-top: 50px;
+      }
+      .tab-nav {
+        display: flex;
+        border-bottom: 2px solid #e5e7eb;
+        margin-bottom: 20px;
+      }
+      .tab-button {
+        background: none;
+        border: none;
+        padding: 12px 24px;
+        font-size: 16px;
+        font-weight: 600;
+        color: #6b7280;
+        cursor: pointer;
+        border-bottom: 3px solid transparent;
+        transition: all 0.3s ease;
+      }
+      .tab-button:hover {
+        color: #374151;
+        background-color: #f9fafb;
+      }
+      .tab-button.active {
+        color: #3b82f6;
+        border-bottom-color: #3b82f6;
+      }
+      .tab-content {
+        display: none;
+      }
+      .tab-content.active {
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1 class="title">Autopilot Testing Timeline (15:20:00 - 15:31:00)</h1>
+      <h2>Start Time: 15:21:00</h2>
+      <h2>End Time: 15:31:00</h2>
+
+      <div class="legend">
+        <div class="legend-item" data-dataset="0" onclick="toggleDataset(0)">
+          <div class="legend-dot" style="background-color: #3b82f6"></div>
+          <span>NF Status (Left Axis: 0=OFF, 100=ON)</span>
+        </div>
+        <div class="legend-item" data-dataset="1" onclick="toggleDataset(1)">
+          <div class="legend-dot" style="background-color: #ef4444"></div>
+          <span>CPU Percentage (Left Axis)</span>
+        </div>
+        <div class="legend-item" data-dataset="2" onclick="toggleDataset(2)">
+          <div class="legend-dot" style="background-color: #22c55e"></div>
+          <span>Replica Count (Right Axis)</span>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="metricsChart"></canvas>
+      </div>
+
+      <div class="note">
+        <strong>Multi-Axis Chart:</strong> NF Status and CPU % use the left
+        Y-axis (0-100), while Replica Count uses the right Y-axis (0-6).
+      </div>
+
+      <!-- Workload Metrics with Tab Structure -->
+      <div class="tab-container">
+        <h1 class="title">Workload Metrics Timeline (15:21:00 - 15:31:00)</h1>
+
+        <div class="tab-nav">
+          <button class="tab-button active" onclick="switchTab('requests-tab')">
+            Requests & Success Rate
+          </button>
+          <button class="tab-button" onclick="switchTab('performance-tab')">
+            Latency & Network
+          </button>
+        </div>
+
+        <!-- Tab 1: Requests & Success Rate -->
+        <div id="requests-tab" class="tab-content active">
+          <div class="legend">
+            <div
+              class="legend-item"
+              data-dataset="0"
+              onclick="toggleRequestsDataset(0)"
+            >
+              <div class="legend-dot" style="background-color: #f59e0b"></div>
+              <span>Requests (Left Axis: Count)</span>
+            </div>
+            <div
+              class="legend-item"
+              data-dataset="1"
+              onclick="toggleRequestsDataset(1)"
+            >
+              <div class="legend-dot" style="background-color: #06b6d4"></div>
+              <span>Success Rate (Right Axis: %)</span>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <canvas id="requestsChart"></canvas>
+          </div>
+
+          <div class="note">
+            <strong>Multi-Axis Chart:</strong> Requests use the left Y-axis,
+            while Success Rate uses the right Y-axis (%).
+          </div>
+        </div>
+
+        <!-- Tab 2: Latency & Network -->
+        <div id="performance-tab" class="tab-content">
+          <div class="legend">
+            <div
+              class="legend-item"
+              data-dataset="0"
+              onclick="togglePerformanceDataset(0)"
+            >
+              <div class="legend-dot" style="background-color: #ec4899"></div>
+              <span>Latency (Left Axis: ms)</span>
+            </div>
+            <div
+              class="legend-item"
+              data-dataset="1"
+              onclick="togglePerformanceDataset(1)"
+            >
+              <div class="legend-dot" style="background-color: #8b5cf6"></div>
+              <span>Network In (Right Axis: KB/s)</span>
+            </div>
+          </div>
+
+          <div class="chart-container">
+            <canvas id="performanceChart"></canvas>
+          </div>
+
+          <div class="note">
+            <strong>Multi-Axis Chart:</strong> Latency uses the left Y-axis
+            (ms), while Network In uses the right Y-axis (KB/s).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      // Workload MEtrics Data from Network
+      let raw_metrics_network_data = [[1758090007,0.000028744809964913937,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090017,4.145626659968734e-6,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090027,4.56775853895643e-6,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090037,0.000016039442033744884,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090047,4.491220696861488e-6,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090057,3.7746924461968034e-6,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090067,0.000015621798159822433,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090077,2.85430902934544e-6,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090087,4.845026812918101e-6,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090097,0.000010471578857243302,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090107,3.4583679376792106e-6,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090117,4.9044069017055526e-6,63856640.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090127,0.2151004748753922,75963050.66666667,null,0.95,1073741824.0,0.95,1073741824.0,1.0,2.9,100.0,2500.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090137,0.8913778476370159,113823744.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,5.0,100.0,5000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090147,0.9574546106815628,164918613.33333334,null,0.95,1073741824.0,0.95,1073741824.0,1.0,4.4,100.0,5000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090157,0.9333721700508708,291183274.6666667,null,0.95,1073741824.0,0.95,1073741824.0,1.0,3.2,100.0,30000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090167,0.9478983590031148,393617408.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,3.6,100.0,30000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090177,0.955082397601706,492194474.6666667,null,0.95,1073741824.0,0.95,1073741824.0,1.0,3.4,100.0,30000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090187,0.9479278764602268,592404480.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,4.5,100.0,60000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090197,0.951327247909082,610376704.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,4.6,100.0,60000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090207,0.9530357379936064,550017706.6666666,null,0.95,1073741824.0,0.95,1073741824.0,1.0,3.6,100.0,60000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090217,0.950998537399858,510896810.6666667,17719.666666666668,0.95,1073741824.0,0.95,1073741824.0,1.0,22.200000000000003,18.468468468468473,60000.0,null,1.0,10.0,18.1,0.95,1073741824.0,0.95,1073741824.0],[1758090227,0.9477610731272096,698376192.0,14708.0,0.95,1073741824.0,0.95,1073741824.0,4.0,24.099999999999998,53.941908713692946,60000.0,null,1.0,10.0,11.1,0.95,1073741824.0,0.95,1073741824.0],[1758090237,1.905577016733759,1278214144.0,35721.0,0.95,1073741824.0,0.95,1073741824.0,4.0,29.0,61.72413793103447,60000.0,null,1.0,10.0,11.1,0.95,1073741824.0,0.95,1073741824.0],[1758090247,1.891551909587835,1344380928.0,24047.666666666668,0.95,1073741824.0,0.95,1073741824.0,7.0,16.4,100.0,60000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090257,1.8953577858822563,1354447872.0,27987.0,0.95,1073741824.0,0.95,1073741824.0,7.0,17.3,99.42196531791907,60000.0,null,1.0,10.0,0.1,0.95,1073741824.0,0.95,1073741824.0],[1758090267,1.8977459808997468,1136298666.6666667,31880.0,0.95,1073741824.0,0.95,1073741824.0,7.0,14.5,99.3103448275862,60000.0,null,1.0,10.0,0.1,0.95,1073741824.0,0.95,1073741824.0],[1758090277,1.9112528048476998,1492785834.6666665,32884.66666666667,0.95,1073741824.0,0.95,1073741824.0,7.0,11.7,98.2905982905983,60000.0,null,1.0,10.0,0.2,0.95,1073741824.0,0.95,1073741824.0],[1758090287,1.8929763369375485,1624999594.6666665,25706.75,0.95,1073741824.0,0.95,1073741824.0,7.0,7.9,100.0,60000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090297,1.8973442235589832,1063690240.0,87299.0,0.95,1073741824.0,0.95,1073741824.0,7.0,69.1,10.274963820549921,60000.0,null,1.0,10.0,62.0,0.95,1073741824.0,0.95,1073741824.0],[1758090307,1.892488959016503,956197546.6666667,9600.666666666666,0.95,1073741824.0,0.95,1073741824.0,8.0,29.0,100.0,60000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090317,6.205363483693647,1349517653.3333333,49971.0,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,8.0,38.4,82.8125,60000.0,null,1.0,10.0,6.6,0.95,1073741824.0,0.95,1073741824.0],[1758090327,5.602315439392874,455379626.6666666,115458.33333333333,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,10.0,30.0,99.66666666666666,1000.0,null,1.0,10.0,0.1,0.95,1073741824.0,0.95,1073741824.0],[1758090337,5.694293774130893,426107904.0,48210.41666666667,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,10.0,28.2,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090347,5.516811833163698,423147861.3333333,48158.583333333336,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,10.0,29.0,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090357,5.361477605301195,420610048.0,47467.666666666664,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,10.0,28.3,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090367,4.480350959252176,393906517.3333334,38420.166666666664,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,10.0,30.200000000000003,99.66887417218543,1000.0,null,1.0,10.0,0.1,0.95,1073741824.0,0.95,1073741824.0],[1758090377,3.8832055808335695,371497301.3333334,33177.83333333333,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,10.0,28.0,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090387,6.12919515892379,535124650.6666666,51826.49999999999,0.95,1073741824.0,0.95,1073741824.0,7.0,28.6,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090397,5.510690292615382,553878528.0,49953.75,0.95,1073741824.0,0.95,1073741824.0,10.0,29.1,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090407,5.921984658231757,696220672.0,222717.58333333334,0.9499999999999998,1073741824.0,0.9499999999999998,1073741824.0,10.0,28.7,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090417,5.527238512346862,499900416.00000006,45826.33333333333,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,10.0,29.6,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090427,5.929375726303844,564780032.0000001,160532.58333333334,0.95,1073741824.0,0.95,1073741824.0,10.0,27.3,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090437,5.363387647752366,566037162.6666666,48112.916666666664,0.95,1073741824.0,0.95,1073741824.0,10.0,29.6,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090447,5.400368939229837,544608256.0,48897.66666666667,0.95,1073741824.0,0.95,1073741824.0,10.0,29.0,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090578,3.1565880940413424,331231914.6666666,26981.333333333332,0.9500000000000001,1073741824.0,0.9500000000000001,1073741824.0,10.0,null,null,null,null,1.0,10.0,null,0.95,1073741824.0,0.95,1073741824.0],[1758090588,5.65415598738982,531931136.0,49043.5,0.95,1073741824.0,0.95,1073741824.0,10.0,29.2,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090598,5.546410818801043,581502293.3333334,47481.0,0.95,1073741824.0,0.95,1073741824.0,7.0,28.5,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090608,5.24149446973059,566834517.3333333,46849.08333333333,0.95,1073741824.0,0.95,1073741824.0,7.0,28.4,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090618,5.389491888031342,573372757.3333333,46582.08333333333,0.95,1073741824.0,0.95,1073741824.0,10.0,28.0,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090628,5.8987490927066055,727219541.3333333,267984.1666666666,0.9499999999999998,1073741824.0,0.9499999999999998,1073741824.0,10.0,29.0,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090638,5.79931274603231,625453397.3333334,156977.91666666666,0.95,1073741824.0,0.95,1073741824.0,10.0,28.3,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090648,5.502409094414804,555038719.9999999,47471.41666666667,0.95,1073741824.0,0.95,1073741824.0,10.0,27.9,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090658,5.63927969371714,545838421.3333334,47740.0,0.95,1073741824.0,0.95,1073741824.0,10.0,28.9,100.0,500.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090668,5.570464073992078,565934080.0,48602.00000000001,0.95,1073741824.0,0.95,1073741824.0,10.0,28.4,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090678,5.3455274810416045,543327232.0,47160.166666666664,0.95,1073741824.0,0.95,1073741824.0,10.0,27.2,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090688,5.701029422030044,561415509.3333333,48750.666666666664,0.95,1073741824.0,0.95,1073741824.0,10.0,30.1,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090698,5.655755369075589,580766037.3333333,49640.41666666667,0.95,1073741824.0,0.95,1073741824.0,10.0,28.9,100.0,1000.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090708,5.14570997901029,912641024.0,1031001.4999999999,0.9499999999999997,1073741824.0,0.9499999999999997,1073741824.0,10.0,25.7,99.22178988326849,1000.0,null,1.0,10.0,0.2,0.95,1073741824.0,0.95,1073741824.0],[1758090718,0.12994859927114613,832602112.0,2023.3333333333333,0.9499999999999997,1073741824.0,0.9499999999999997,1073741824.0,10.0,0.0,100.0,2500.0,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090728,0.015810895301939937,780488362.6666667,2024.2499999999998,0.9499999999999997,1073741824.0,0.9499999999999997,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090738,0.004440002237967285,512983040.0,1300.5,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090748,0.008273580565274984,501281792.0,1135.8333333333333,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090758,0.0001235769923026195,494477312.0,1163.0,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090768,0.000013253455054300915,52039680.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0],[1758090778,0.000015574782927896932,52039680.0,null,0.95,1073741824.0,0.95,1073741824.0,1.0,0.0,100.0,0.5,null,1.0,10.0,0.0,0.95,1073741824.0,0.95,1073741824.0]];
+
+      var rawData = raw_metrics_network_data.map((v) => {
+        let cpuLimit = v[6];
+        let cpuUsage = v[1];
+        let pods = v[8];
+        let cpuPerc = cpuLimit > 0 ?( (cpuUsage / cpuLimit) * 100) / pods : 0;
+        return { timestamp: v[0], nf: false, cpu: cpuPerc, pods};
+      });
+
+      var rawWorloadMetrics = raw_metrics_network_data.map((v) => {
+        return {
+          timestamp: v[0],
+          network_in: v[2],
+          requests: v[9],
+          request_success_rate: v[10],
+          latency: v[11],
+        };
+      });
+
+      // Process the data and limit to 15:04:00 - 15:15:00 (23 data points for 11 minutes at 30-second intervals)
+      var processedData = [];
+      for (var i = 0; i < rawData.length; i++) {
+        var item = rawData[i];
+
+        // Use actual timestamp from item[0] and round to nearest 30-second mark
+        var timestamp = item.timestamp * 1000; // Convert to milliseconds
+        var date = new Date(timestamp);
+
+        // Round to nearest 30-second mark
+        var seconds = date.getSeconds();
+        var roundedSeconds = seconds < 30 ? 0 : 30;
+        date.setSeconds(roundedSeconds, 0); // Set seconds and milliseconds
+
+        var hours = date.getHours();
+        var mins = date.getMinutes();
+
+        var hoursStr = hours < 10 ? "0" + hours : "" + hours;
+        var minsStr = mins < 10 ? "0" + mins : "" + mins;
+        var secsStr =
+          roundedSeconds < 10 ? "0" + roundedSeconds : "" + roundedSeconds;
+        var timeLabel = hoursStr + ":" + minsStr + ":" + secsStr;
+
+        processedData.push({
+          time: timeLabel,
+          nfStatus: item.nf ? 100 : 0,
+          cpuPercent: Math.round(item.cpu * 100) / 100,
+          replicaCount: item.pods,
+        });
+      }
+
+      // Extract data for the chart
+      var labels = [];
+      var nfStatusData = [];
+      var cpuData = [];
+      var replicaData = [];
+
+      for (var j = 0; j < processedData.length; j++) {
+        labels.push(processedData[j].time);
+        nfStatusData.push(processedData[j].nfStatus);
+        cpuData.push(processedData[j].cpuPercent);
+        replicaData.push(processedData[j].replicaCount);
+      }
+
+      // Create the chart
+      var ctx = document.getElementById("metricsChart").getContext("2d");
+      var chart = new Chart(ctx, {
+        type: "line",
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: "NF Status",
+              data: nfStatusData,
+              borderColor: "#3b82f6",
+              backgroundColor: "rgba(59, 130, 246, 0.1)",
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: "y",
+            },
+            {
+              label: "CPU %",
+              data: cpuData,
+              borderColor: "#ef4444",
+              backgroundColor: "rgba(239, 68, 68, 0.1)",
+              borderWidth: 2,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              yAxisID: "y",
+            },
+            {
+              label: "Replica Count",
+              data: replicaData,
+              borderColor: "#22c55e",
+              backgroundColor: "rgba(34, 197, 94, 0.1)",
+              borderWidth: 2,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              yAxisID: "y1",
+            },
+          ],
+        },
+        options: {
+          layout: {
+            padding: {
+              top: 20,
+              right: 20,
+              bottom: 20,
+              left: 20,
+            },
+          },
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var datasetLabel = context.dataset.label;
+                  var value = context.parsed.y;
+
+                  if (datasetLabel === "NF Status") {
+                    return datasetLabel + ": " + (value === 100 ? "ON" : "OFF");
+                  }
+                  return datasetLabel + ": " + value;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: "Time",
+              },
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45,
+              },
+            },
+            y: {
+              type: "linear",
+              display: true,
+              position: "left",
+              title: {
+                display: true,
+                text: "NF Status & CPU %",
+              },
+              suggestedMin: -5,
+              suggestedMax: 105,
+              grid: {
+                drawOnChartArea: true,
+              },
+            },
+            y1: {
+              type: "linear",
+              display: true,
+              position: "right",
+              title: {
+                display: true,
+                text: "Replica Count",
+              },
+              suggestedMin: -0.5,
+              suggestedMax: 6.5,
+              grid: {
+                drawOnChartArea: false,
+              },
+            },
+          },
+          elements: {
+            line: {
+              tension: 0.1,
+            },
+          },
+        },
+      });
+
+      // Function to toggle dataset visibility
+      function toggleDataset(datasetIndex) {
+        const meta = chart.getDatasetMeta(datasetIndex);
+        const legendItem = document.querySelector(
+          `[data-dataset="${datasetIndex}"]`
+        );
+
+        // Toggle visibility
+        meta.hidden =
+          meta.hidden === null
+            ? !chart.data.datasets[datasetIndex].hidden
+            : !meta.hidden;
+
+        // Update legend item appearance
+        if (meta.hidden) {
+          legendItem.classList.add("hidden");
+        } else {
+          legendItem.classList.remove("hidden");
+        }
+
+        // Update the chart
+        chart.update();
+      }
+
+      // Process workload data
+      var processedWorkloadData = [];
+      for (var i = 0; i < rawWorloadMetrics.length; i++) {
+        var item = rawWorloadMetrics[i];
+
+        // Use actual timestamp from item[0] and round to nearest 30-second mark
+        var timestamp = item.timestamp * 1000; // Convert to milliseconds
+        var date = new Date(timestamp);
+
+        // Round to nearest 30-second mark
+        var seconds = date.getSeconds();
+        var roundedSeconds = seconds < 30 ? 0 : 30;
+        date.setSeconds(roundedSeconds, 0); // Set seconds and milliseconds
+
+        var hours = date.getHours();
+        var mins = date.getMinutes();
+
+        var hoursStr = hours < 10 ? "0" + hours : "" + hours;
+        var minsStr = mins < 10 ? "0" + mins : "" + mins;
+        var secsStr =
+          roundedSeconds < 10 ? "0" + roundedSeconds : "" + roundedSeconds;
+        var timeLabel = hoursStr + ":" + minsStr + ":" + secsStr;
+
+        processedWorkloadData.push({
+          time: timeLabel,
+          networkIn: item.network_in
+            ? Math.round((item.network_in / 1024) * 100) / 100
+            : 0, // Convert bytes to KB
+          requests: item.requests || 0,
+          successRate: item.request_success_rate || 0,
+          latency: item.latency || 0,
+        });
+      }
+
+      // Extract data for workload chart
+      var workloadLabels = [];
+      var networkInData = [];
+      var requestsData = [];
+      var successRateData = [];
+      var latencyData = [];
+
+      for (var j = 0; j < processedWorkloadData.length; j++) {
+        workloadLabels.push(processedWorkloadData[j].time);
+        networkInData.push(processedWorkloadData[j].networkIn);
+        requestsData.push(processedWorkloadData[j].requests);
+        successRateData.push(processedWorkloadData[j].successRate);
+        latencyData.push(processedWorkloadData[j].latency);
+      }
+
+      // Create the requests chart (Tab 1: Requests & Success Rate)
+      var requestsCtx = document
+        .getElementById("requestsChart")
+        .getContext("2d");
+      var requestsChart = new Chart(requestsCtx, {
+        type: "line",
+        data: {
+          labels: workloadLabels,
+          datasets: [
+            {
+              label: "Requests",
+              data: requestsData,
+              borderColor: "#f59e0b",
+              backgroundColor: "rgba(245, 158, 11, 0.1)",
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: "y",
+            },
+            {
+              label: "Success Rate (%)",
+              data: successRateData,
+              borderColor: "#06b6d4",
+              backgroundColor: "rgba(6, 182, 212, 0.1)",
+              borderWidth: 2,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              yAxisID: "y1",
+            },
+          ],
+        },
+        options: {
+          layout: {
+            padding: {
+              top: 20,
+              right: 20,
+              bottom: 20,
+              left: 20,
+            },
+          },
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var datasetLabel = context.dataset.label;
+                  var value = context.parsed.y;
+
+                  if (datasetLabel === "Requests") {
+                    return datasetLabel + ": " + value;
+                  } else if (datasetLabel === "Success Rate (%)") {
+                    return datasetLabel + ": " + value + "%";
+                  }
+                  return datasetLabel + ": " + value;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: "Time",
+              },
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45,
+              },
+            },
+            y: {
+              type: "linear",
+              display: true,
+              position: "left",
+              title: {
+                display: true,
+                text: "Requests (Count)",
+              },
+              grid: {
+                drawOnChartArea: true,
+              },
+            },
+            y1: {
+              type: "linear",
+              display: true,
+              position: "right",
+              title: {
+                display: true,
+                text: "Success Rate (%)",
+              },
+              suggestedMin: 0,
+              suggestedMax: 100,
+              grid: {
+                drawOnChartArea: false,
+              },
+            },
+          },
+          elements: {
+            line: {
+              tension: 0.1,
+            },
+          },
+        },
+      });
+
+      // Create the performance chart (Tab 2: Latency & Network)
+      var performanceCtx = document
+        .getElementById("performanceChart")
+        .getContext("2d");
+      var performanceChart = new Chart(performanceCtx, {
+        type: "line",
+        data: {
+          labels: workloadLabels,
+          datasets: [
+            {
+              label: "Latency (ms)",
+              data: latencyData,
+              borderColor: "#ec4899",
+              backgroundColor: "rgba(236, 72, 153, 0.1)",
+              borderWidth: 3,
+              pointRadius: 4,
+              pointHoverRadius: 6,
+              yAxisID: "y",
+            },
+            {
+              label: "Network In (KB/s)",
+              data: networkInData,
+              borderColor: "#8b5cf6",
+              backgroundColor: "rgba(139, 92, 246, 0.1)",
+              borderWidth: 2,
+              pointRadius: 3,
+              pointHoverRadius: 5,
+              yAxisID: "y1",
+            },
+          ],
+        },
+        options: {
+          layout: {
+            padding: {
+              top: 20,
+              right: 20,
+              bottom: 20,
+              left: 20,
+            },
+          },
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: {
+            mode: "index",
+            intersect: false,
+          },
+          plugins: {
+            legend: {
+              display: false,
+            },
+            tooltip: {
+              callbacks: {
+                label: function (context) {
+                  var datasetLabel = context.dataset.label;
+                  var value = context.parsed.y;
+
+                  if (datasetLabel === "Latency (ms)") {
+                    return datasetLabel + ": " + value + " ms";
+                  } else if (datasetLabel === "Network In (KB/s)") {
+                    return datasetLabel + ": " + value + " KB/s";
+                  }
+                  return datasetLabel + ": " + value;
+                },
+              },
+            },
+          },
+          scales: {
+            x: {
+              display: true,
+              title: {
+                display: true,
+                text: "Time",
+              },
+              ticks: {
+                maxRotation: 45,
+                minRotation: 45,
+              },
+            },
+            y: {
+              type: "linear",
+              display: true,
+              position: "left",
+              title: {
+                display: true,
+                text: "Latency (ms)",
+              },
+              grid: {
+                drawOnChartArea: true,
+              },
+            },
+            y1: {
+              type: "linear",
+              display: true,
+              position: "right",
+              title: {
+                display: true,
+                text: "Network In (KB/s)",
+              },
+              grid: {
+                drawOnChartArea: false,
+              },
+            },
+          },
+          elements: {
+            line: {
+              tension: 0.1,
+            },
+          },
+        },
+      });
+
+      // Tab switching functionality
+      function switchTab(tabId) {
+        // Hide all tab contents
+        const tabContents = document.querySelectorAll(".tab-content");
+        tabContents.forEach((content) => content.classList.remove("active"));
+
+        // Remove active class from all tab buttons
+        const tabButtons = document.querySelectorAll(".tab-button");
+        tabButtons.forEach((button) => button.classList.remove("active"));
+
+        // Show selected tab content
+        document.getElementById(tabId).classList.add("active");
+
+        // Activate the clicked button
+        event.target.classList.add("active");
+
+        // Resize charts when tab becomes visible
+        if (tabId === "requests-tab") {
+          setTimeout(() => requestsChart.resize(), 100);
+        } else if (tabId === "performance-tab") {
+          setTimeout(() => performanceChart.resize(), 100);
+        }
+      }
+
+      // Function to toggle requests dataset visibility
+      function toggleRequestsDataset(datasetIndex) {
+        const meta = requestsChart.getDatasetMeta(datasetIndex);
+        const legendItem = document.querySelector(
+          '#requests-tab [data-dataset="' + datasetIndex + '"]'
+        );
+
+        // Toggle visibility
+        meta.hidden =
+          meta.hidden === null
+            ? !requestsChart.data.datasets[datasetIndex].hidden
+            : !meta.hidden;
+
+        // Update legend item appearance
+        if (meta.hidden) {
+          legendItem.classList.add("hidden");
+        } else {
+          legendItem.classList.remove("hidden");
+        }
+
+        // Update the chart
+        requestsChart.update();
+      }
+
+      // Function to toggle performance dataset visibility
+      function togglePerformanceDataset(datasetIndex) {
+        const meta = performanceChart.getDatasetMeta(datasetIndex);
+        const legendItem = document.querySelector(
+          '#performance-tab [data-dataset="' + datasetIndex + '"]'
+        );
+
+        // Toggle visibility
+        meta.hidden =
+          meta.hidden === null
+            ? !performanceChart.data.datasets[datasetIndex].hidden
+            : !meta.hidden;
+
+        // Update legend item appearance
+        if (meta.hidden) {
+          legendItem.classList.add("hidden");
+        } else {
+          legendItem.classList.remove("hidden");
+        }
+
+        // Update the chart
+        performanceChart.update();
+      }
+    </script>
+  </body>
+</html>
