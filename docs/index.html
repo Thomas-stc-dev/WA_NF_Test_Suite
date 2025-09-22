@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WA NF Test Suite - Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            margin: 0;
+            padding: 40px;
+            background-color: #f9fafb;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .title {
+            color: #1f2937;
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #6b7280;
+            font-size: 18px;
+            margin-bottom: 0;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section-title {
+            color: #374151;
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 10px;
+        }
+        .file-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .file-item {
+            margin-bottom: 15px;
+            padding: 15px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background-color: #f9fafb;
+            transition: all 0.3s ease;
+        }
+        .file-item:hover {
+            background-color: #f3f4f6;
+            border-color: #d1d5db;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px -2px rgba(0, 0, 0, 0.1);
+        }
+        .file-link {
+            color: #3b82f6;
+            text-decoration: none;
+            font-size: 18px;
+            font-weight: 600;
+            display: block;
+            margin-bottom: 5px;
+        }
+        .file-link:hover {
+            color: #1d4ed8;
+            text-decoration: underline;
+        }
+        .file-description {
+            color: #6b7280;
+            font-size: 14px;
+            margin: 0;
+        }
+        .badge {
+            display: inline-block;
+            padding: 2px 8px;
+            background-color: #dbeafe;
+            color: #1e40af;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 10px;
+        }
+        .info-box {
+            background-color: #eff6ff;
+            border: 1px solid #bfdbfe;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 30px;
+        }
+        .info-title {
+            color: #1e40af;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+        .info-text {
+            color: #1e3a8a;
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">WA NF Test Suite</h1>
+            <p class="subtitle">Documentation and Test Results</p>
+        </div>
+
+        <div class="section">
+            <h2 class="section-title">Documentation Files</h2>
+            <ul class="file-list">
+                <li class="file-item">
+                    <a href="WA-no-NF-Chart.html" class="file-link">
+                        WA-no-NF-Chart.html
+                        <span class="badge">Chart</span>
+                    </a>
+                    <p class="file-description">
+                        Autopilot Testing Timeline Chart (15:20:00 - 15:31:00) - Displays metrics without NetFunnel including NF Status, CPU Percentage, Replica Count, Requests, Success Rate, Latency, and Network metrics.
+                    </p>
+                </li>
+                <li class="file-item">
+                    <a href="WA+NF-Chart.html" class="file-link">
+                        WA+NF-Chart.html
+                        <span class="badge">Chart</span>
+                    </a>
+                    <p class="file-description">
+                        Autopilot Testing Timeline Chart with NetFunnel - Comparative analysis showing system behavior with NetFunnel integration enabled.
+                    </p>
+                </li>
+            </ul>
+        </div>
+
+        <div class="info-box">
+            <div class="info-title">About This Test Suite</div>
+            <p class="info-text">
+                This documentation contains performance analysis charts comparing system behavior with and without NetFunnel integration. 
+                The charts display various metrics including CPU usage, replica counts, request patterns, latency measurements, and network traffic 
+                to help analyze the impact of NetFunnel on system performance during autopilot testing scenarios.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
