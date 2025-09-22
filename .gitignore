@@ -12,8 +12,8 @@ coverage
 
 # logs
 logs
-_.log
-report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
+*.log
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
 
 # dotenv environment variable files
 .env
@@ -32,3 +32,47 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Python virtual environment
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate
+terraform.tfstate.backup
+*.tfplan
+*.tfvars
+**/.terraform/
+**/.terraform.lock.hcl
+**/terraform.tfstate
+**/terraform.tfstate.backup
+
+# SSH keys and certificates
+*.pem
+*.key
+*.crt
+*.csr
+
+# Proxy configuration files (sensitive)
+working-proxies.txt
+working_proxies.txt
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Editor files
+.vscode/
+*.swp
+*.swo
+*~
+
+# Runtime files
+*.pid
+*.lock
